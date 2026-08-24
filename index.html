@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>R.S.T</title>
+    <style>
+        /* ---------- Общие сбросы ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            color: #e8edf5;
+            user-select: none;
+            overflow: hidden;
+            background: #0b0d14;
+        }
+
+        /* ---------- Фоновое слайд-шоу ---------- */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease-in-out;
+            opacity: 0;
+            z-index: 0;
+            will-change: opacity;
+        }
+        .bg-layer.active {
+            opacity: 1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 12, 20, 0.70);
+            z-index: 1;
+            backdrop-filter: blur(2px);
+        }
+
+        /* ---------- Основной контент ---------- */
+        .loader {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .logo {
+            font-size: 4.8rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #f0c27f, #fc5c7d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(252, 92, 125, 0.3);
+            margin-bottom: 0.2rem;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            color: #8899bb;
+            text-transform: uppercase;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+        }
+
+        .divider {
+            width: 80px;
+            height: 3px;
+            margin: 0 auto 2.5rem auto;
+            background: linear-gradient(90deg, #fc5c7d, #f0c27f);
+            border-radius: 3px;
+            opacity: 0.6;
+        }
+
+        .loading-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        /* ---------- Пульсирующий контейнер для круга ---------- */
+        .spinner-wrapper {
+            width: 70px;
+            height: 70px;
+            animation: pulse 2.4s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* ---------- Сам круг с радужным градиентом (вращается) ---------- */
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000
+            );
+            mask: radial-gradient(circle, transparent 55%, black 56%);
+            -webkit-mask: radial-gradient(circle, transparent 55%, black 56%);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 30px rgba(255, 0, 200, 0.3);
+            will-change: transform;
+        }
+
+        /* Анимация пульсации (размер и свечение) */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 0, 200, 0.3));
+            }
+            50% {
+                transform: scale(1.12);
+                filter: drop-shadow(0 0 50px rgba(255, 0, 200, 0.6));
+            }
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 0, 200, 0.3));
+            }
+        }
+
+        /* Анимация вращения градиента (переливание) */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Текст подключения */
+        .connect-text {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #b0c4e0;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 0.1rem;
+        }
+
+        .connect-text .dots {
+            display: inline-flex;
+            gap: 0.2rem;
+            margin-left: 0.2rem;
+        }
+
+        .connect-text .dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #b0c4e0;
+            border-radius: 50%;
+            animation: dotPulse 1.8s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .connect-text .dots span:nth-child(1) { animation-delay: 0s; }
+        .connect-text .dots span:nth-child(2) { animation-delay: 0.3s; }
+        .connect-text .dots span:nth-child(3) { animation-delay: 0.6s; }
+
+        /* Кнопка Discord */
+        .discord-btn {
+            display: inline-block;
+            margin-top: 2.8rem;
+            padding: 0.8rem 2.4rem;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .discord-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 6px 25px rgba(88, 101, 242, 0.5);
+        }
+
+        .discord-btn:active {
+            transform: scale(0.96);
+        }
+
+        .discord-btn::before {
+            content: "💬 ";
+            font-size: 1.1rem;
+        }
+
+        /* ---------- Кнопка управления музыкой (под Discord) ---------- */
+        .music-btn {
+            display: inline-block;
+            margin-top: 0.8rem;
+            padding: 0.4rem 1.4rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            color: #c8d4e8;
+            font-size: 0.95rem;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: background 0.25s, transform 0.2s, border-color 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.04);
+            color: #fff;
+        }
+
+        .music-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: scale(0.96); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { opacity: 0; transform: scale(0.6); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .logo { font-size: 3.2rem; }
+            .subtitle { font-size: 1.1rem; letter-spacing: 0.2em; }
+            .spinner-wrapper { width: 54px; height: 54px; }
+            .connect-text { font-size: 1rem; }
+            .discord-btn { padding: 0.6rem 1.8rem; font-size: 0.9rem; }
+            .music-btn { padding: 0.3rem 1rem; font-size: 0.85rem; }
+        }
+
+        @media (max-width: 400px) {
+            .logo { font-size: 2.6rem; }
+            .subtitle { font-size: 0.9rem; }
+            .spinner-wrapper { width: 44px; height: 44px; }
+            .connect-text { font-size: 0.9rem; }
+            .music-btn { padding: 0.2rem 0.8rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Фоновые слои -->
+    <div class="bg-layer" id="bg1"></div>
+    <div class="bg-layer" id="bg2"></div>
+    <div class="overlay"></div>
+
+    <!-- Основной контент -->
+    <div class="loader">
+        <div class="logo">R.S.T</div>
+        <div class="subtitle">Russian Sandbox Tartarus</div>
+        <div class="divider"></div>
+
+        <div class="loading-indicator">
+            <div class="spinner-wrapper">
+                <div class="spinner"></div>
+            </div>
+            <div class="connect-text">
+                Подключение к серверу
+                <span class="dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Кнопка Discord -->
+        <a href="https://discord.gg/inventograd" target="_blank" class="discord-btn">
+            Присоединиться к Discord
+        </a>
+
+        <!-- Кнопка управления музыкой (под Discord) -->
+        <button class="music-btn" id="music-toggle">🔇 Музыка</button>
+    </div>
+
+    <!-- Аудио для фоновой музыки -->
+    <audio id="bg-music" loop preload="auto" src="background-music.mp3"></audio>
+
+    <script>
+        (function() {
+            // ----- Фоновое слайд-шоу -----
+            const images = [
+                'screen1.jpg',
+                'screen2.jpg',
+                'screen3.jpg',
+                'screen4.jpg',
+                'screen5.jpg',
+				'screen6.jpg'
+            ];
+
+            const layer1 = document.getElementById('bg1');
+            const layer2 = document.getElementById('bg2');
+
+            let currentIndex = 0;
+            layer1.style.backgroundImage = `url(${images[currentIndex]})`;
+            layer1.classList.add('active');
+
+            let activeLayer = 1;
+
+            function changeBackground() {
+                const nextIndex = (currentIndex + 1) % images.length;
+                let inactiveLayer, activeLayerEl;
+                if (activeLayer === 1) {
+                    inactiveLayer = layer2;
+                    activeLayerEl = layer1;
+                } else {
+                    inactiveLayer = layer1;
+                    activeLayerEl = layer2;
+                }
+
+                inactiveLayer.style.backgroundImage = `url(${images[nextIndex]})`;
+                inactiveLayer.classList.add('active');
+                activeLayerEl.classList.remove('active');
+                activeLayer = (activeLayer === 1) ? 2 : 1;
+                currentIndex = nextIndex;
+            }
+
+            setInterval(changeBackground, 6000);
+
+            // ----- Фоновая музыка с кнопкой -----
+            const audio = document.getElementById('bg-music');
+            const toggleBtn = document.getElementById('music-toggle');
+            let isPlaying = false;
+
+            // Функция обновления текста кнопки
+            function updateButton() {
+                toggleBtn.textContent = isPlaying ? '🔊 Музыка' : '🔇 Музыка';
+            }
+
+            // Попытка автозапуска
+            audio.play().then(() => {
+                isPlaying = true;
+                updateButton();
+            }).catch(() => {
+                // Автозапуск не удался – ждём первого клика
+                isPlaying = false;
+                updateButton();
+                document.addEventListener('click', function firstClick() {
+                    if (!isPlaying) {
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            updateButton();
+                        }).catch(() => {});
+                    }
+                    document.removeEventListener('click', firstClick);
+                });
+            });
+
+            // Обработчик клика по кнопке
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // чтобы не сработал глобальный клик
+                if (isPlaying) {
+                    audio.pause();
+                    isPlaying = false;
+                    updateButton();
+                } else {
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        updateButton();
+                    }).catch(() => {
+                        // Если по какой-то причине не удалось – ничего
+                    });
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
