@@ -182,66 +182,6 @@
         .connect-text .dots span:nth-child(2) { animation-delay: 0.3s; }
         .connect-text .dots span:nth-child(3) { animation-delay: 0.6s; }
 
-        /* Кнопка Discord */
-        .discord-btn {
-            display: inline-block;
-            margin-top: 2.8rem;
-            padding: 0.8rem 2.4rem;
-            background: linear-gradient(135deg, #5865f2, #4752c4);
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-decoration: none;
-            border-radius: 50px;
-            transition: transform 0.2s, box-shadow 0.3s;
-            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
-            border: none;
-            cursor: pointer;
-        }
-
-        .discord-btn:hover {
-            transform: scale(1.04);
-            box-shadow: 0 6px 25px rgba(88, 101, 242, 0.5);
-        }
-
-        .discord-btn:active {
-            transform: scale(0.96);
-        }
-
-        .discord-btn::before {
-            content: "💬 ";
-            font-size: 1.1rem;
-        }
-
-        /* ---------- Кнопка управления музыкой (под Discord) ---------- */
-        .music-btn {
-            display: inline-block;
-            margin-top: 0.8rem;
-            padding: 0.4rem 1.4rem;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 50px;
-            color: #c8d4e8;
-            font-size: 0.95rem;
-            font-weight: 400;
-            letter-spacing: 0.04em;
-            cursor: pointer;
-            transition: background 0.25s, transform 0.2s, border-color 0.3s;
-            backdrop-filter: blur(4px);
-        }
-
-        .music-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: scale(1.04);
-            color: #fff;
-        }
-
-        .music-btn:active {
-            transform: scale(0.96);
-        }
-
         /* Анимации */
         @keyframes fadeIn {
             0% { opacity: 0; transform: scale(0.96); }
@@ -259,8 +199,6 @@
             .subtitle { font-size: 1.1rem; letter-spacing: 0.2em; }
             .spinner-wrapper { width: 54px; height: 54px; }
             .connect-text { font-size: 1rem; }
-            .discord-btn { padding: 0.6rem 1.8rem; font-size: 0.9rem; }
-            .music-btn { padding: 0.3rem 1rem; font-size: 0.85rem; }
         }
 
         @media (max-width: 400px) {
@@ -268,7 +206,6 @@
             .subtitle { font-size: 0.9rem; }
             .spinner-wrapper { width: 44px; height: 44px; }
             .connect-text { font-size: 0.9rem; }
-            .music-btn { padding: 0.2rem 0.8rem; font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -298,17 +235,9 @@
                 </span>
             </div>
         </div>
-
-        <!-- Кнопка Discord -->
-        <a href="https://discord.gg/inventograd" target="_blank" class="discord-btn">
-            Присоединиться к Discord
-        </a>
-
-        <!-- Кнопка управления музыкой (под Discord) -->
-        <button class="music-btn" id="music-toggle">🔇 Музыка</button>
     </div>
 
-    <!-- Аудио для фоновой музыки -->
+    <!-- Аудио для фоновой музыки (поместите свой MP3 в ту же папку) -->
     <audio id="bg-music" loop preload="auto" src="background-music.mp3"></audio>
 
     <script>
@@ -321,6 +250,7 @@
                 'screen4.jpg',
                 'screen5.jpg',
 				'screen6.jpg'
+				
             ];
 
             const layer1 = document.getElementById('bg1');
@@ -352,50 +282,23 @@
 
             setInterval(changeBackground, 6000);
 
-            // ----- Фоновая музыка с кнопкой -----
+            // ----- Фоновая музыка (автозапуск + первый клик) -----
             const audio = document.getElementById('bg-music');
-            const toggleBtn = document.getElementById('music-toggle');
             let isPlaying = false;
 
-            // Функция обновления текста кнопки
-            function updateButton() {
-                toggleBtn.textContent = isPlaying ? '🔊 Музыка' : '🔇 Музыка';
-            }
-
-            // Попытка автозапуска
+            // Попытка запустить музыку сразу
             audio.play().then(() => {
                 isPlaying = true;
-                updateButton();
             }).catch(() => {
-                // Автозапуск не удался – ждём первого клика
-                isPlaying = false;
-                updateButton();
+                // Если автозапуск заблокирован – запускаем при первом клике/касании
                 document.addEventListener('click', function firstClick() {
                     if (!isPlaying) {
                         audio.play().then(() => {
                             isPlaying = true;
-                            updateButton();
                         }).catch(() => {});
                     }
                     document.removeEventListener('click', firstClick);
-                });
-            });
-
-            // Обработчик клика по кнопке
-            toggleBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // чтобы не сработал глобальный клик
-                if (isPlaying) {
-                    audio.pause();
-                    isPlaying = false;
-                    updateButton();
-                } else {
-                    audio.play().then(() => {
-                        isPlaying = true;
-                        updateButton();
-                    }).catch(() => {
-                        // Если по какой-то причине не удалось – ничего
-                    });
-                }
+                }, { once: true }); // выполнится только один раз
             });
         })();
     </script>
