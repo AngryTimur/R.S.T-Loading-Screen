@@ -1,306 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>R.S.T</title>
-    <style>
-        /* ---------- Общие сбросы ---------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            color: #e8edf5;
-            user-select: none;
-            overflow: hidden;
-            background: #0b0d14;
-        }
-
-        /* ---------- Фоновое слайд-шоу ---------- */
-        .bg-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            transition: opacity 1.5s ease-in-out;
-            opacity: 0;
-            z-index: 0;
-            will-change: opacity;
-        }
-        .bg-layer.active {
-            opacity: 1;
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 12, 20, 0.70);
-            z-index: 1;
-            backdrop-filter: blur(2px);
-        }
-
-        /* ---------- Основной контент ---------- */
-        .loader {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            padding: 2rem;
-            max-width: 800px;
-            width: 100%;
-            animation: fadeIn 1.2s ease-out;
-        }
-
-        .logo {
-            font-size: 4.8rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #f0c27f, #fc5c7d);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 30px rgba(252, 92, 125, 0.3);
-            margin-bottom: 0.2rem;
-            line-height: 1.1;
-        }
-
-        .subtitle {
-            font-size: 1.5rem;
-            font-weight: 300;
-            letter-spacing: 0.3em;
-            color: #8899bb;
-            text-transform: uppercase;
-            margin-bottom: 2.5rem;
-            opacity: 0.9;
-        }
-
-        .divider {
-            width: 80px;
-            height: 3px;
-            margin: 0 auto 2.5rem auto;
-            background: linear-gradient(90deg, #fc5c7d, #f0c27f);
-            border-radius: 3px;
-            opacity: 0.6;
-        }
-
-        .loading-indicator {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.2rem;
-        }
-
-        /* ---------- Пульсирующий контейнер для круга ---------- */
-        .spinner-wrapper {
-            width: 70px;
-            height: 70px;
-            animation: pulse 2.4s ease-in-out infinite;
-            will-change: transform;
-        }
-
-        /* ---------- Сам круг с радужным градиентом (вращается) ---------- */
-        .spinner {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000
-            );
-            mask: radial-gradient(circle, transparent 55%, black 56%);
-            -webkit-mask: radial-gradient(circle, transparent 55%, black 56%);
-            animation: spin 4s linear infinite;
-            box-shadow: 0 0 30px rgba(255, 0, 200, 0.3);
-            will-change: transform;
-        }
-
-        /* Анимация пульсации (размер и свечение) */
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 20px rgba(255, 0, 200, 0.3));
-            }
-            50% {
-                transform: scale(1.12);
-                filter: drop-shadow(0 0 50px rgba(255, 0, 200, 0.6));
-            }
-            100% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 20px rgba(255, 0, 200, 0.3));
-            }
-        }
-
-        /* Анимация вращения градиента (переливание) */
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Текст подключения */
-        .connect-text {
-            font-size: 1.25rem;
-            font-weight: 400;
-            color: #b0c4e0;
-            letter-spacing: 0.1em;
-            display: flex;
-            align-items: center;
-            gap: 0.1rem;
-        }
-
-        .connect-text .dots {
-            display: inline-flex;
-            gap: 0.2rem;
-            margin-left: 0.2rem;
-        }
-
-        .connect-text .dots span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #b0c4e0;
-            border-radius: 50%;
-            animation: dotPulse 1.8s ease-in-out infinite;
-            opacity: 0;
-        }
-
-        .connect-text .dots span:nth-child(1) { animation-delay: 0s; }
-        .connect-text .dots span:nth-child(2) { animation-delay: 0.3s; }
-        .connect-text .dots span:nth-child(3) { animation-delay: 0.6s; }
-
-        /* Анимации */
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: scale(0.96); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes dotPulse {
-            0%, 100% { opacity: 0; transform: scale(0.6); }
-            50% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Адаптивность */
-        @media (max-width: 600px) {
-            .logo { font-size: 3.2rem; }
-            .subtitle { font-size: 1.1rem; letter-spacing: 0.2em; }
-            .spinner-wrapper { width: 54px; height: 54px; }
-            .connect-text { font-size: 1rem; }
-        }
-
-        @media (max-width: 400px) {
-            .logo { font-size: 2.6rem; }
-            .subtitle { font-size: 0.9rem; }
-            .spinner-wrapper { width: 44px; height: 44px; }
-            .connect-text { font-size: 0.9rem; }
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>R.S.T. — Loading</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-    <!-- Фоновые слои -->
-    <div class="bg-layer" id="bg1"></div>
-    <div class="bg-layer" id="bg2"></div>
+<div class="screen">
+    <div id="bgA" class="bg bg--a"></div>
+    <div id="bgB" class="bg bg--b"></div>
     <div class="overlay"></div>
+    <div class="grain"></div>
 
-    <!-- Основной контент -->
-    <div class="loader">
-        <div class="logo">R.S.T</div>
-        <div class="subtitle">Russian Sandbox Tartarus</div>
-        <div class="divider"></div>
-
-        <div class="loading-indicator">
-            <div class="spinner-wrapper">
-                <div class="spinner"></div>
+    <main class="content">
+        <header class="brand">
+            <div class="logo-box"><img id="serverLogo" src="assets/logo/s.png" alt="R.S.T. logo"><span id="logoFallback">R.S.T</span></div>
+            <div>
+                <div class="brand-name">RIFT Project</div>
+                <div class="brand-sub">Russian Sandbox Tartarus</div>
             </div>
-            <div class="connect-text">
-                Подключение к серверу
-                <span class="dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
+        </header>
+
+        <section class="main">
+            <div class="eyebrow">ДОБРО ПОЖАЛОВАТЬ!</div>
+            <h1 class="title">R.S.T<span>⠀</span></h1>
+            <div id="status" class="status">Подключение к серверу...</div>
+
+            <div class="progress-wrap">
+                <div class="progress-head"><span>ЗАГРУЗКА</span><span id="percent" class="percent">0%</span></div>
+                <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+                <div class="progress-foot"><span id="progressFoot">ОЖИДАНИЕ...</span><span id="serverMeta">R.S.T. // ONLINE</span></div>
             </div>
-        </div>
-    </div>
 
-    <!-- Аудио для фоновой музыки (поместите свой MP3 в ту же папку) -->
-    <audio id="bg-music" loop preload="auto" src="background-music.mp3"></audio>
+            <a id="discord" class="discord" href="https://discord.gg/ВАШ_КОД" target="_blank" rel="noopener"><span>DISCORD</span><span class="discord-arrow">→</span></a>
+        </section>
+    </main>
 
-    <script>
-        (function() {
-            // ----- Фоновое слайд-шоу -----
-            const images = [
-                'screen1.jpg',
-                'screen2.jpg',
-                'screen3.jpg',
-                'screen4.jpg',
-                'screen5.jpg',
-				'screen6.jpg'
-				
-            ];
+    <aside id="tip" class="tip">
+        <div id="tipTitle" class="tip-title">СОВЕТ</div>
+        <div id="tipText" class="tip-text">Следите за окружением — опасность может быть совсем рядом.</div>
+    </aside>
 
-            const layer1 = document.getElementById('bg1');
-            const layer2 = document.getElementById('bg2');
-
-            let currentIndex = 0;
-            layer1.style.backgroundImage = `url(${images[currentIndex]})`;
-            layer1.classList.add('active');
-
-            let activeLayer = 1;
-
-            function changeBackground() {
-                const nextIndex = (currentIndex + 1) % images.length;
-                let inactiveLayer, activeLayerEl;
-                if (activeLayer === 1) {
-                    inactiveLayer = layer2;
-                    activeLayerEl = layer1;
-                } else {
-                    inactiveLayer = layer1;
-                    activeLayerEl = layer2;
-                }
-
-                inactiveLayer.style.backgroundImage = `url(${images[nextIndex]})`;
-                inactiveLayer.classList.add('active');
-                activeLayerEl.classList.remove('active');
-                activeLayer = (activeLayer === 1) ? 2 : 1;
-                currentIndex = nextIndex;
-            }
-
-            setInterval(changeBackground, 6000);
-
-            // ----- Фоновая музыка (автозапуск + первый клик) -----
-            const audio = document.getElementById('bg-music');
-            let isPlaying = false;
-
-            // Попытка запустить музыку сразу
-            audio.play().then(() => {
-                isPlaying = true;
-            }).catch(() => {
-                // Если автозапуск заблокирован – запускаем при первом клике/касании
-                document.addEventListener('click', function firstClick() {
-                    if (!isPlaying) {
-                        audio.play().then(() => {
-                            isPlaying = true;
-                        }).catch(() => {});
-                    }
-                    document.removeEventListener('click', firstClick);
-                }, { once: true }); // выполнится только один раз
-            });
-        })();
-    </script>
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="assets/music/loading.mp3" type="audio/mpeg">
+    </audio>
+</div>
+<script src="js/loading.js"></script>
 </body>
 </html>
