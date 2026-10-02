@@ -21,7 +21,8 @@
         currentFile: '',
         serverName: '',
         map: '',
-        gamemode: ''
+        gamemode: '',
+        statusProgress: 0
     };
 
     const $ = (id) => document.getElementById(id);
@@ -154,7 +155,7 @@
 
         value = Math.max(0, Math.min(100, value));
 
-        // REAL: прогресс никогда не придумывается и не движется назад.
+        // Реальный файловый прогресс не движется назад.
         if (value < state.lastProgress) return;
 
         state.lastProgress = value;
@@ -213,8 +214,7 @@
         const layers = [$('bgA'), $('bgB')];
 
         function setLayer(layer, index) {
-            layer.style.backgroundImage =
-                'url("' + backgrounds[index] + '")';
+            layer.src = backgrounds[index];
         }
 
         // Первый фон — случайный.
@@ -268,10 +268,32 @@
     };
 
     window.SetStatusChanged = function (value) {
-        status.textContent = normalizeStatus(value);
+        const raw = normalizeStatus(value);
+        const textValue = String(value || '');
+        status.textContent = raw;
 
-        if (/finished|complete|done|готово/i.test(String(value))) {
+        // GMod сообщает здесь стадии, которые уже идут после скачивания файлов.
+        // Файловая часть остаётся реальной, а последние проценты показывают
+        // переход между реальными стадиями подключения, чтобы шкала не
+        // застывала на 10–20% во время Starting Lua и аналогичных этапов.
+        let stageProgress = 0;
+
+        if (/retriev|server info|получен|подключ/i.test(textValue)) stageProgress = 2;
+        else if (/downloading|download|загрузк/i.test(textValue)) stageProgress = 5;
+        else if (/starting lua/i.test(textValue)) stageProgress = 92;
+        else if (/sending client info/i.test(textValue)) stageProgress = 96;
+        else if (/sending info/i.test(textValue)) stageProgress = 97;
+        else if (/starting|prepar|auth|client/i.test(textValue)) stageProgress = 98;
+        else if (/finished|complete|done|готово|entering game|joining/i.test(textValue)) stageProgress = 100;
+
+        if (stageProgress > 0) {
+            state.statusProgress = stageProgress;
+            setProgress(Math.max(state.lastProgress, stageProgress));
+        }
+
+        if (/finished|complete|done|готово|entering game|joining/i.test(textValue)) {
             status.textContent = 'Готово.';
+            setProgress(100);
         }
     };
 
@@ -320,7 +342,26 @@
         });
     }
 
-    $('discord').href = CONFIG.discordUrl;
+    const discordButton = $('discord');
+    discordButton.href = CONFIG.discordUrl;
+    discordButton.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        // target=_blank/window.open даёт GMod CEF шанс создать внешнее
+        // дочернее окно; если оно заблокировано, пробуем обычную навигацию.
+        let opened = false;
+        try {
+            const popup = window.open(CONFIG.discordUrl, '_blank');
+            opened = !!popup;
+        } catch (e) {}
+
+        if (!opened) {
+            try {
+                window.location.href = CONFIG.discordUrl;
+            } catch (e) {}
+        }
+    });
+
     $('serverMeta').textContent = CONFIG.serverName + ' // ONLINE';
     status.textContent = 'Подключение к серверу...';
 
